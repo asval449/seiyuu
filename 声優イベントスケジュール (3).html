@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>声優イベントスケジュール</title>
+<style>
+:root{--bg:#fff;--fg:#202124;--mut:#5f6368;--line:#dadce0;--card:#f8f9fa;--pri:#1a73e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#202124;--fg:#e8eaed;--mut:#9aa0a6;--line:#3c4043;--card:#2d2e31;--pri:#8ab4f8}}
+:root[data-theme="dark"]{--bg:#202124;--fg:#e8eaed;--mut:#9aa0a6;--line:#3c4043;--card:#2d2e31;--pri:#8ab4f8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif}
+header{display:flex;gap:4px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+header b{margin-right:8px;white-space:nowrap}
+button,select,input,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+button{cursor:pointer}button.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+nav button{white-space:nowrap}
+main{padding:12px;max-width:1100px;margin:auto}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border-radius:16px;padding:3px 10px;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:4px}
+.chip.off{opacity:.4}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.dow{padding:4px;text-align:center;color:var(--mut);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{min-height:92px;padding:2px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;cursor:pointer}
+.cell.o{background:var(--card)}.cell .d{font-size:12px;padding:1px 5px;display:inline-block;border-radius:10px}
+.cell.t .d{background:var(--pri);color:#fff}
+.ev{display:block;width:100%;text-align:left;border:0;border-radius:6px;padding:1px 5px;margin-top:2px;font-size:11px;color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.more{font-size:11px;color:var(--mut);padding-left:4px}
+.year{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.mini{border:1px solid var(--line);border-radius:12px;padding:8px}.mini h4{margin:0 0 4px;cursor:pointer}
+.mg{display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;text-align:center}
+.mg span{padding:2px 0;cursor:pointer;border-radius:50%}.mg .has{background:var(--pri);color:#fff}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.pc{border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--card);text-align:center}
+.av{width:84px;height:84px;border-radius:50%;object-fit:cover;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:30px;color:var(--mut)}
+.pc h3{margin:6px 0}.next{background:var(--bg);border-radius:10px;padding:6px;margin:6px 0;font-size:13px;text-align:left}
+.badge{font-size:11px;padding:1px 8px;border-radius:10px;color:#fff}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:20;padding:12px}
+.box{background:var(--bg);border-radius:16px;padding:16px;width:100%;max-width:440px;max-height:92vh;overflow:auto}
+.box label{display:block;margin:8px 0 2px;color:var(--mut);font-size:12px}.box input,.box select,.box textarea{width:100%}
+.row{display:flex;gap:6px}.row>*{flex:1}
+.card{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:var(--card)}
+.list>div{padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+pre{background:var(--card);padding:8px;border-radius:8px;overflow:auto;font-size:12px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.wk>div{border:1px solid var(--line);border-radius:10px;padding:4px;min-height:200px}
+@media(max-width:600px){.cell{min-height:64px}.ev{font-size:10px}.wk{grid-template-columns:1fr}.wk>div{min-height:0}}
+</style></head><body>
+<header><b>🎤 声優スケジュール</b><nav id="nav"></nav><span id="st" style="font-size:11px;color:var(--mut);white-space:nowrap;margin-left:auto"></span><select id="th" onchange="setTheme(this.value)" title="表示モード"><option value="auto">自動</option><option value="light">ライト</option><option value="dark">ダーク</option></select></header>
+<main id="app"></main><div id="md"></div>
+<script>
+const TYPES=["ラジオ","ソロイベント","ソロライブ","ライブ","イベント","雑誌","その他"];
+const $=s=>document.querySelector(s);
+let S={people:[],events:[],rules:[],theme:"auto",settings:{on:true,timing:"1d",custom:3},hist:[],notified:{}};
+try{const r=localStorage.getItem("seiyuu");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem("seiyuu",JSON.stringify(S))}catch(e){}dbQ()};
+let col=null,synced={},tm=null,ready=false;
+const setSt=t=>{const e=$("#st");if(e)e.textContent=t};
+const docsOf=()=>{const m={};S.people.forEach(p=>m["p_"+p.id]=p);S.events.forEach(e=>m["e_"+e.id]=e);S.rules.forEach(r=>m["r_"+r.id]=r);m.settings={settings:S.settings,theme:S.theme,hist:S.hist.slice(-50),notified:S.notified};return m};
+function dbQ(){if(!col||!ready)return;clearTimeout(tm);tm=setTimeout(async()=>{const m=docsOf();try{for(const k in m){const j=JSON.stringify(m[k]);if(synced[k]!==j){await col.doc(k).set(JSON.parse(j));synced[k]=j}}for(const k in synced)if(!(k in m)){await col.doc(k).delete();delete synced[k]}setSt("☁ 保存済み")}catch(e){setSt("⚠ クラウド保存に失敗（この端末には保存済み）")}},600)}
+async function initDb(){try{const db=await claude.use("db"),user=await claude.use("user");if(!db||!user)return setSt("この端末のみに保存");const id=await user.id();if(!id)return setSt("この端末のみに保存");col=db.collection("data/users/"+id);const snap=await col.get();
+ snap.docs.forEach(d=>{const k=d.id;synced[k]=JSON.stringify(d.data());const v=JSON.parse(synced[k]);if(k=="settings"){S.settings=v.settings||S.settings;S.theme=v.theme||S.theme;S.hist=v.hist||[];S.notified=Object.assign({},S.notified,v.notified)}else if(k[0]=="p"){const i=S.people.findIndex(x=>x.id==v.id);i<0?S.people.push(v):S.people[i]=v}else if(k[0]=="e"){const i=S.events.findIndex(x=>x.id==v.id);i<0?S.events.push(v):S.events[i]=v}else if(k[0]=="r"){const i=S.rules.findIndex(x=>x.id==v.id);i<0?S.rules.push(v):S.rules[i]=v}});
+ ready=true;try{localStorage.setItem("seiyuu",JSON.stringify(S))}catch(e){}dbQ();applyTheme();fromHash();setSt("☁ 同期済み")}catch(e){setSt("この端末のみに保存")}}
+let view="cal",mode="month",cur=new Date(),hidden=new Set(),typeF="",selPerson=null;
+const pad=n=>String(n).padStart(2,"0"),iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>iso(new Date()),uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const P=id=>S.people.find(p=>p.id==id);
+const fmt=s=>{const[y,m,d]=s.split("-");return`${y}年${+m}月${+d}日`};
+function nextEv(pid){let b=S.events.filter(e=>e.pid==pid&&e.date>=today()).sort((x,y)=>x.date.localeCompare(y.date))[0];S.rules.filter(r=>r.pid==pid).forEach(r=>{const d=nextR(r);if(d&&(!b||d<b.date))b=mk(r,d)});return b}
+function vis(e){return !hidden.has(e.pid)&&(!typeF||e.type==typeF)&&P(e.pid)}
+function evOn(ds){return S.events.filter(e=>e.date==ds).concat(occ(ds)).filter(vis)}
+function nav(){const t=[["cal","カレンダー"],["people","人物"],["notif","通知"],["share","共有・Google"]];
+$("#nav").innerHTML=t.map(([k,l])=>`<button class="${view==k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")+`<button class="pri" onclick="evForm()">＋ イベント</button>`}
+function evBtn(e){const p=P(e.pid);return`<button class="ev" style="background:${esc(e.color)}" title="${esc(e.title)}" onclick="event.stopPropagation();${edC(e)}">${e.rid?"🔁":""}${esc(p.name)}｜${esc(e.title)}</button>`}
+function move(n){if(mode=="year")cur.setFullYear(cur.getFullYear()+n);else if(mode=="month")cur.setMonth(cur.getMonth()+n,1);else cur.setDate(cur.getDate()+(mode=="week"?7*n:n));render()}
+function title(){const y=cur.getFullYear(),m=cur.getMonth()+1;if(mode=="year")return y+"年";if(mode=="month")return`${y}年${m}月`;if(mode=="week"){const s=wkStart(cur);return`${fmt(iso(s))}〜`}return fmt(iso(cur))}
+function wkStart(d){const s=new Date(d);s.setDate(s.getDate()-s.getDay());return s}
+const DOW=["日","月","火","水","木","金","土"];
+function calView(){
+ let h=`<div class="bar"><button onclick="move(-1)">◀</button><button onclick="move(1)">▶</button>`;
+ if(mode!="year")h+=`<button onclick="setY(cur.getFullYear()-1)">≪年</button><button onclick="setY(cur.getFullYear()+1)">年≫</button>`;
+ h+=`<button onclick="cur=new Date();render()">今日</button><select title="年を選択" onchange="setY(+this.value)">${yrs(cur.getFullYear()).map(v=>`<option ${v==cur.getFullYear()?"selected":""}>${v}</option>`).join("")}</select><b style="font-size:18px">${title()}</b><span style="flex:1"></span>`;
+ h+=["year","month","week","day"].map((k,i)=>`<button class="${mode==k?"on":""}" onclick="go('cal',null,'${k}')">${"年月週日"[i]}</button>`).join("")+`</div>`;
+ h+=`<div class="chips">`+S.people.map(p=>`<span class="chip ${hidden.has(p.id)?"off":""}" onclick="hidden.has('${p.id}')?hidden.delete('${p.id}'):hidden.add('${p.id}');render()">${esc(p.name)}</span>`).join("")+
+ `<select onchange="typeF=this.value;render()"><option value="">全タイプ</option>${TYPES.map(t=>`<option ${typeF==t?"selected":""}>${t}</option>`).join("")}</select></div>`;
+ if(!S.people.length)h+=`<div class="card">まず「人物」画面で人物を登録してください。</div>`;
+ const y=cur.getFullYear(),m=cur.getMonth();
+ if(mode=="month"){h+=`<div class="grid">`+DOW.map(d=>`<div class="dow">${d}</div>`).join("");
+  const s=wkStart(new Date(y,m,1));for(let i=0;i<42;i++){const d=new Date(s);d.setDate(s.getDate()+i);const ds=iso(d),ev=evOn(ds);
+   h+=`<div class="cell ${d.getMonth()!=m?"o":""} ${ds==today()?"t":""}" onclick="evForm(null,'${ds}')"><span class="d">${d.getDate()}</span>${ev.slice(0,3).map(evBtn).join("")}${ev.length>3?`<div class="more" onclick="event.stopPropagation();cur=new Date('${ds}T00:00');go('cal',null,'day')">他${ev.length-3}件</div>`:""}</div>`}
+  h+=`</div>`}
+ else if(mode=="week"){const s=wkStart(cur);h+=`<div class="wk">`;for(let i=0;i<7;i++){const d=new Date(s);d.setDate(s.getDate()+i);const ds=iso(d);
+  h+=`<div class="${ds==today()?"t":""}" onclick="evForm(null,'${ds}')"><b>${d.getMonth()+1}/${d.getDate()}（${DOW[i]}）</b>${evOn(ds).map(evBtn).join("")}</div>`}h+=`</div>`}
+ else if(mode=="day"){const ds=iso(cur),ev=evOn(ds);h+=`<div class="card"><button onclick="evForm(null,'${ds}')">＋ この日に登録</button>`+(ev.length?ev.map(e=>`<div class="card" style="border-left:6px solid ${esc(e.color)}"><b>${esc(e.title)}</b><br>${esc(P(e.pid).name)} ／ ${esc(e.type)} <button onclick="${edC(e)}">編集</button></div>`).join(""):`<p style="color:var(--mut)">予定なし</p>`)+`</div>`}
+ else{h+=`<div class="year">`;for(let mm=0;mm<12;mm++){const f=new Date(y,mm,1);h+=`<div class="mini"><h4 onclick="cur=new Date(${y},${mm},1);go('cal',null,'month')">${mm+1}月</h4><div class="mg">`+DOW.map(d=>`<span>${d}</span>`).join("")+"<span></span>".repeat(f.getDay());
+  const n=new Date(y,mm+1,0).getDate();for(let d=1;d<=n;d++){const ds=`${y}-${pad(mm+1)}-${pad(d)}`;h+=`<span class="${evOn(ds).length?"has":""}" onclick="cur=new Date('${ds}T00:00');go('cal',null,'day')">${d}</span>`}h+=`</div></div>`}h+=`</div>`}
+ return h}
+function peopleView(){
+ if(selPerson&&P(selPerson)){const p=P(selPerson),ev=S.events.filter(e=>e.pid==p.id).sort((a,b)=>a.date.localeCompare(b.date)),n=nextEv(p.id),rs=S.rules.filter(r=>r.pid==p.id);
+  return`<button onclick="go('people')">← 一覧</button><div class="card" style="text-align:center;margin-top:10px">${av(p)}<h2>${esc(p.name)}</h2><p>${esc(p.memo)||"メモなし"}</p><button onclick="pForm('${p.id}')">編集</button></div>
+  <div class="card"><b>次回イベント：</b>${n?`${fmt(n.date)} ${esc(n.title)}（${esc(n.type)}）`:"予定なし"}</div>
+  <div class="card list"><b>定期イベント（${rs.length}）</b> <button onclick="rForm(null,'${p.id}')">＋ 定期イベントを設定</button>${rs.map(r=>`<div><span class="badge" style="background:${esc(r.color)}">${esc(r.type)}</span>${FQ[r.freq]} ${esc(r.title)}<span style="flex:1"></span><button onclick="rForm('${r.id}')">編集</button></div>`).join("")}</div>
+  <div class="card list"><b>登録済みイベント（${ev.length}）</b>${ev.map(e=>`<div><span class="badge" style="background:${esc(e.color)}">${esc(e.type)}</span>${fmt(e.date)} ${esc(e.title)}<span style="flex:1"></span><button onclick="evForm('${e.id}')">編集</button></div>`).join("")}</div>`}
+ return`<div class="bar"><button class="pri" onclick="pForm()">＋ 人物を登録</button></div><div class="people">`+S.people.map(p=>{const n=nextEv(p.id);
+  return`<div class="pc">${av(p)}<h3>${esc(p.name)}</h3><div class="next">${n?`<b>${fmt(n.date)}</b><br>${esc(n.title)}<br><span class="badge" style="background:${esc(n.color)}">${esc(n.type)}</span>`:"予定なし"}</div><button onclick="go('people','${p.id}')">詳細</button> <button onclick="rForm(null,'${p.id}')">定期</button> <button onclick="pForm('${p.id}')">編集</button> <button onclick="delP('${p.id}')">削除</button></div>`}).join("")+`</div>`+(S.people.length?"":`<p>まだ人物がいません。</p>`)}
+const av=p=>p.photo?`<img class="av" src="${esc(p.photo)}" alt="">`:`<span class="av">${esc([...p.name][0]||"?")}</span>`;
+function notifView(){const s=S.settings;
+ return`<div class="card"><label><input type="checkbox" style="width:auto" ${s.on?"checked":""} onchange="S.settings.on=this.checked;save()"> 通知を有効にする</label><br><br>
+ <label>既定の通知タイミング</label><select onchange="S.settings.timing=this.value;save();render()">${[["7d","1週間前"],["3d","3日前"],["1d","1日前"],["0d","当日"],["custom","自由設定"]].map(([v,l])=>`<option value="${v}" ${s.timing==v?"selected":""}>${l}</option>`).join("")}</select>
+ ${s.timing=="custom"?`<br><br><label>何日前（自由設定）</label><input type="number" min="0" value="${s.custom}" style="width:100px" onchange="S.settings.custom=+this.value;save()">`:""}
+ <br><br><button onclick="askPerm()">ブラウザ通知を許可する</button> <span id="perm" style="color:var(--mut)">${"Notification" in window?Notification.permission:"非対応"}</span>
+ <p style="color:var(--mut);font-size:12px">このページを開いている間、条件に合うイベントを通知します（同じ通知は重複しません）。ブラウザを閉じていても届くWebプッシュにはサーバー側の仕組みが必要です。</p></div>
+ <div class="card list"><b>通知履歴</b>${S.hist.slice(-30).reverse().map(h=>`<div>${esc(h)}</div>`).join("")||"<div>履歴なし</div>"}</div>`}
+function shareView(){return`<div class="card"><b>Gmailで共有・Googleカレンダー連携</b><p>この公開ページにはサーバーが無いため、Googleログイン・Gmail招待・Googleカレンダー同期はまだ動きません（アプリ内カレンダーは単体で利用できます）。実装時の手順と環境変数：</p>
+<ol><li>Google Cloud Consoleでプロジェクトを作成し、Google Calendar APIを有効化</li><li>OAuth同意画面を設定し、OAuth 2.0クライアントID（ウェブ）を作成</li><li>承認済みリダイレクトURIにバックエンドのコールバックURLを登録</li><li>下記の環境変数をサーバーに設定</li></ol>
+<pre>GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+VAPID_PUBLIC_KEY=   # Webプッシュ用
+VAPID_PRIVATE_KEY=
+DATABASE_URL=       # 共有・同期用DB</pre>
+<p>連携状態：<b>未設定</b></p></div>
+<div class="card"><b>データのバックアップ</b><p>データはこのブラウザ内に保存されています。</p><button onclick="exp()">JSONを書き出す</button> <button onclick="document.getElementById('imp').click()">読み込む</button><input id="imp" type="file" accept=".json" hidden onchange="imp(this.files[0])"></div>`}
+function exp(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));a.download="seiyuu-schedule.json";a.click()}
+function imp(f){if(!f)return;f.text().then(t=>{try{S=Object.assign(S,JSON.parse(t));save();render()}catch(e){alert("読み込めませんでした")}})}
+function askPerm(){if(!("Notification" in window))return alert("このブラウザは通知に非対応です");Notification.requestPermission().then(r=>{const e=$("#perm");if(e)e.textContent=r})}
+function modal(h){$("#md").innerHTML=`<div class="modal" onclick="if(event.target==this)closeM()"><div class="box">${h}</div></div>`}
+const closeM=()=>$("#md").innerHTML="";
+let CR={img:null,z:1,x:0,y:0},dr=null;
+function drawCr(W,c){c=c||$("#cv");if(!c)return;W=W||c.width;const g=c.getContext("2d"),k=W/200;g.fillStyle="#9aa0a6";g.fillRect(0,0,W,W);const i=CR.img;if(!i)return;const sc=Math.max(200/i.width,200/i.height)*CR.z,mx=Math.max(0,(i.width*sc-200)/2),my=Math.max(0,(i.height*sc-200)/2);CR.x=Math.max(-mx,Math.min(mx,CR.x));CR.y=Math.max(-my,Math.min(my,CR.y));g.drawImage(i,(100-i.width*sc/2+CR.x)*k,(100-i.height*sc/2+CR.y)*k,i.width*sc*k,i.height*sc*k)}
+function loadCr(src){const i=new Image();i.onload=()=>{CR={img:i,z:1,x:0,y:0};const z=$("#cz");if(z)z.value=1;const w=$("#cw");if(w)w.style.display="block";drawCr()};i.src=src}
+function photo(f){if(!f)return;const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const c=document.createElement("canvas"),s=Math.min(1,800/Math.max(i.width,i.height));c.width=i.width*s;c.height=i.height*s;c.getContext("2d").drawImage(i,0,0,c.width,c.height);loadCr(c.toDataURL("image/jpeg",.9))};i.src=r.result};r.readAsDataURL(f)}
+function cd(e){dr={x:e.clientX,y:e.clientY};e.target.setPointerCapture(e.pointerId)}
+function cm(e){if(!dr||!CR.img)return;CR.x+=e.clientX-dr.x;CR.y+=e.clientY-dr.y;dr={x:e.clientX,y:e.clientY};drawCr()}
+function pForm(id){const p=id?P(id):{name:"",memo:"",photo:""};CR={img:null,z:1,x:0,y:0};
+ modal(`<h3>${id?"人物を編集":"人物を登録"}</h3><label>名前（必須）</label><input id="pn" value="${esc(p.name)}"><label>顔写真</label><input type="file" accept="image/*" onchange="photo(this.files[0])"><div id="cw" style="display:none"><div style="color:var(--mut);font-size:12px;margin-top:6px">ドラッグで位置、スライダーで拡大</div><canvas id="cv" width="200" height="200" style="display:block;margin:8px auto;width:200px;height:200px;border-radius:50%;touch-action:none;cursor:grab" onpointerdown="cd(event)" onpointermove="cm(event)" onpointerup="dr=null" onpointercancel="dr=null"></canvas><input type="range" id="cz" min="1" max="4" step="0.01" value="1" oninput="CR.z=+this.value;drawCr()"><button style="margin-top:6px" onclick="CR.img=null;$('#cw').style.display='none'">写真を外す</button></div><label>メモ</label><textarea id="pm" rows="3">${esc(p.memo)}</textarea><br><br><div class="row"><button onclick="closeM()">キャンセル</button><button class="pri" onclick="saveP('${id||""}')">保存</button></div>`);drawCr();if(p.photo)loadCr(p.photo)}
+function saveP(id){const n=$("#pn").value.trim();if(!n)return alert("名前を入力してください");let ph="";if(CR.img){const c=document.createElement("canvas");c.width=c.height=256;drawCr(256,c);ph=c.toDataURL("image/jpeg",.85)}
+ if(id)Object.assign(P(id),{name:n,memo:$("#pm").value,photo:ph});else S.people.push({id:uid(),name:n,memo:$("#pm").value,photo:ph});save();closeM();render()}
+function delP(id){if(!confirm("この人物と、その人物のイベントをすべて削除しますか？"))return;S.people=S.people.filter(p=>p.id!=id);S.events=S.events.filter(e=>e.pid!=id);S.rules=S.rules.filter(r=>r.pid!=id);save();render()}
+function evForm(id,date){if(!S.people.length){go("people");return alert("先に人物を登録してください")}
+ const e=id?S.events.find(x=>x.id==id):{pid:selPerson||S.people[0].id,date:date||iso(cur),title:"",type:TYPES[4],color:"#1a73e8",notify:true,timing:""};
+ const[y,m,d]=e.date.split("-").map(Number);const Y=new Date().getFullYear();
+ modal(`<h3>${id?"イベントを編集":"イベントを登録"}</h3><label>人物</label><select id="ep">${S.people.map(p=>`<option value="${p.id}" ${p.id==e.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
+ <label>日付</label><div class="row"><select id="ey">${yrs(y).map(v=>`<option ${v==y?"selected":""}>${v}</option>`).join("")}</select><select id="em">${Array.from({length:12},(_,i)=>i+1).map(v=>`<option ${v==m?"selected":""}>${v}</option>`).join("")}</select><select id="ed">${Array.from({length:31},(_,i)=>i+1).map(v=>`<option ${v==d?"selected":""}>${v}</option>`).join("")}</select></div>
+ <label>イベント名</label><input id="et" value="${esc(e.title)}"><label>イベントタイプ</label><select id="eT">${TYPES.map(t=>`<option ${t==e.type?"selected":""}>${t}</option>`).join("")}</select>
+ <label>背景色</label><div class="row"><input type="color" id="ec" value="${esc(e.color)}" oninput="$('#eh').value=this.value"><input id="eh" value="${esc(e.color)}" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))$('#ec').value=this.value"></div>
+ <label>通知</label><div class="row"><select id="en"><option value="1" ${e.notify?"selected":""}>ON</option><option value="0" ${!e.notify?"selected":""}>OFF</option></select><select id="et2"><option value="">既定の設定</option>${[["7d","1週間前"],["3d","3日前"],["1d","1日前"],["0d","当日"]].map(([v,l])=>`<option value="${v}" ${e.timing==v?"selected":""}>${l}</option>`).join("")}</select></div><br>
+ <div class="row">${id?`<button onclick="delE('${id}')">削除</button>`:""}<button onclick="closeM()">キャンセル</button><button class="pri" onclick="saveE('${id||""}')">保存</button></div>`)}
+function saveE(id){const t=$("#et").value.trim();if(!t)return alert("イベント名を入力してください");
+ let c=$("#eh").value;if(!/^#[0-9a-fA-F]{6}$/.test(c))c=$("#ec").value;
+ const dt=new Date(+$("#ey").value,+$("#em").value-1,+$("#ed").value);if(dt.getMonth()!=+$("#em").value-1)return alert("存在しない日付です");
+ const o={pid:$("#ep").value,date:iso(dt),title:t,type:$("#eT").value,color:c,notify:$("#en").value=="1",timing:$("#et2").value};
+ if(id){const e=S.events.find(x=>x.id==id);Object.assign(e,o);delete S.notified[id]}else S.events.push(Object.assign({id:uid()},o));save();closeM();render()}
+function delE(id){if(!confirm("削除しますか？"))return;S.events=S.events.filter(e=>e.id!=id);delete S.notified[id];save();closeM();render()}
+const FQ={weekly:"毎週",biweekly:"隔週",monthly:"毎月"};
+function hit(r,ds){if(ds<r.start||(r.end&&ds>r.end)||(r.ex||[]).includes(ds))return false;const a=new Date(r.start+"T00:00"),b=new Date(ds+"T00:00"),df=Math.round((b-a)/864e5);if(r.freq=="weekly")return df%7==0;if(r.freq=="biweekly")return df%14==0;const last=new Date(b.getFullYear(),b.getMonth()+1,0).getDate();return b.getDate()==Math.min(a.getDate(),last)}
+const mk=(r,ds)=>({id:"r_"+r.id+"_"+ds,rid:r.id,pid:r.pid,date:ds,title:r.title,type:r.type,color:r.color,notify:r.notify,timing:""});
+const occ=ds=>S.rules.filter(r=>hit(r,ds)).map(r=>mk(r,ds));
+function nextR(r){const t=new Date(today()+"T00:00");for(let i=0;i<800;i++){const d=new Date(t);d.setDate(t.getDate()+i);const ds=iso(d);if(hit(r,ds))return ds}return null}
+const allUp=()=>{const t0=new Date(today()+"T00:00"),n=Math.min(60,Math.max(7,S.settings.custom||0)),o=[];for(let i=0;i<=n;i++){const d=new Date(t0);d.setDate(t0.getDate()+i);o.push(...occ(iso(d)))}return S.events.concat(o)};
+const edC=e=>e.rid?`rForm('${e.rid}','${e.date}')`:`evForm('${e.id}')`;
+function applyTheme(){const t=S.theme||"auto";if(t=="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",t);const e=$("#th");if(e)e.value=t}
+function setTheme(v){S.theme=v;applyTheme();save()}
+function rForm(rid,x){if(!S.people.length){go("people");return alert("先に人物を登録してください")}
+ const r=rid?S.rules.find(q=>q.id==rid):{pid:x||selPerson||S.people[0].id,title:"",type:"ラジオ",color:"#1a73e8",freq:"weekly",start:iso(cur),end:"",notify:true};if(!r)return;const ds=rid?x:null;
+ modal(`<h3>${rid?"定期イベントを編集":"定期イベントを設定"}</h3><label>人物</label><select id="rp">${S.people.map(p=>`<option value="${p.id}" ${p.id==r.pid?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
+ <label>イベント名（番組名など）</label><input id="rt" value="${esc(r.title)}"><label>イベントタイプ</label><select id="rT">${TYPES.map(t=>`<option ${t==r.type?"selected":""}>${t}</option>`).join("")}</select>
+ <label>繰り返し</label><select id="rf">${Object.entries(FQ).map(([k,v])=>`<option value="${k}" ${k==r.freq?"selected":""}>${v}</option>`).join("")}</select>
+ <label>開始日（この日の曜日・日付が繰り返しの基準）</label><input type="date" id="rs" value="${esc(r.start)}"><label>終了日（空欄なら無期限）</label><input type="date" id="re" value="${esc(r.end)}">
+ <label>背景色</label><div class="row"><input type="color" id="rc" value="${esc(r.color)}" oninput="$('#rh').value=this.value"><input id="rh" value="${esc(r.color)}" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))$('#rc').value=this.value"></div>
+ <label>通知</label><select id="rn"><option value="1" ${r.notify?"selected":""}>ON</option><option value="0" ${!r.notify?"selected":""}>OFF</option></select><br><br>
+ <div class="row" style="flex-wrap:wrap">${rid?`<button onclick="delR('${rid}')">全削除</button>`:""}${ds?`<button onclick="exR('${rid}','${ds}')">この日だけ除外</button>`:""}<button onclick="closeM()">キャンセル</button><button class="pri" onclick="saveR('${rid||""}')">保存</button></div>`)}
+function saveR(id){const t=$("#rt").value.trim(),s0=$("#rs").value,e0=$("#re").value;if(!t)return alert("イベント名を入力してください");if(!s0)return alert("開始日を入力してください");if(e0&&e0<s0)return alert("終了日は開始日以降にしてください");let c=$("#rh").value;if(!/^#[0-9a-fA-F]{6}$/.test(c))c=$("#rc").value;
+ const o={pid:$("#rp").value,title:t,type:$("#rT").value,freq:$("#rf").value,start:s0,end:e0,color:c,notify:$("#rn").value=="1"};
+ if(id)Object.assign(S.rules.find(q=>q.id==id),o);else S.rules.push(Object.assign({id:uid(),ex:[]},o));save();closeM();render()}
+function delR(id){if(!confirm("この定期イベントをすべて削除しますか？"))return;S.rules=S.rules.filter(r=>r.id!=id);save();closeM();render()}
+function exR(id,ds){const r=S.rules.find(q=>q.id==id);r.ex=(r.ex||[]).concat(ds);save();closeM();render()}
+const yrs=c=>{const Y=new Date().getFullYear(),a=[];for(let i=Math.min(Y-40,c);i<=Math.max(Y+40,c);i++)a.push(i);return a};
+function setY(v){const d=cur.getDate();cur.setDate(1);cur.setFullYear(v);cur.setDate(Math.min(d,new Date(v,cur.getMonth()+1,0).getDate()));render()}
+function go(v,pid,m){view=v;selPerson=pid||null;if(m)mode=m;const h=v=="people"&&pid?"person-"+pid:v=="cal"?"cal-"+mode:v;if(location.hash!="#"+h)location.hash=h;else render()}
+function fromHash(){const h=location.hash.slice(1);selPerson=null;if(h.startsWith("person-")&&P(h.slice(7))){view="people";selPerson=h.slice(7)}else if(h.startsWith("cal-")){view="cal";if(["year","month","week","day"].includes(h.slice(4)))mode=h.slice(4)}else if(["cal","people","notif","share"].includes(h))view=h;else view="cal";closeM();render()}
+addEventListener("hashchange",fromHash);
+function render(){nav();$("#app").innerHTML=view=="cal"?calView():view=="people"?peopleView():view=="notif"?notifView():shareView()}
+function check(){const s=S.settings;if(!s.on)return;const t0=new Date(today()+"T00:00");
+ allUp().forEach(e=>{if(!e.notify||!P(e.pid))return;const tm=e.timing||s.timing,n=tm=="custom"?s.custom:parseInt(tm);
+  const diff=Math.round((new Date(e.date+"T00:00")-t0)/864e5);if(diff<0||diff>n)return;
+  const key=e.id+"|"+tm+"|"+e.date;if(S.notified[key])return;S.notified[key]=1;
+  const msg=`${diff==0?"本日":diff+"日後"}：${P(e.pid).name}「${e.title}」（${fmt(e.date)}）`;S.hist.push(today()+" "+msg);save();
+  try{if("Notification" in window&&Notification.permission=="granted")new Notification("イベント通知",{body:msg})}catch(x){}});
+ if(view=="notif")render()}
+applyTheme();fromHash();check();initDb().then(check);setInterval(check,6e4);
+</script></body></html>
